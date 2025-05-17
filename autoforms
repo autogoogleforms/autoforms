@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analizador Universal de Formularios</title>
+    <style>
+        :root {
+            --primary: #1a73e8;
+            --secondary: #34a853;
+            --danger: #d93025;
+            --warning: #f9ab00;
+            --dark: #202124;
+            --light: #f8f9fa;
+            --gray: #5f6368;
+        }
+        body {
+            font-family: 'Google Sans', Roboto, Arial, sans-serif;
+            background-color: #f5f7fa;
+            color: var(--dark);
+            line-height: 1.6;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            padding: 30px;
+            margin-top: 20px;
+        }
+        h1 {
+            color: var(--dark);
+            font-weight: 500;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: var(--gray);
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        .panel {
+            background: var(--light);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 1px solid #dadce0;
+        }
+        .panel-title {
+            font-weight: 500;
+            color: var(--dark);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            font-size: 18px;
+        }
+        .panel-title svg {
+            margin-right: 8px;
+            fill: var(--gray);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #3c4043;
+            font-size: 14px;
+        }
+        input, select, button, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #dadce0;
+            border-radius: 6px;
+            font-size: 15px;
+            transition: all 0.3s;
+            box-sizing: border-box;
+        }
+        textarea {
+            min-height: 100px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 13px;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(26,115,232,0.2);
+            outline: none;
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+        .input-group input {
+            flex: 1;
+        }
+        button {
+            background: var(--primary);
+            color: white;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            font-size: 15px;
+        }
+        button:hover {
+            background: #1765cc;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            transform: translateY(-1px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        button:disabled {
+            background: #9aa0a6;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+        button svg {
+            margin-right: 8px;
+            fill: white;
+        }
+        .btn-secondary {
+            background: var(--secondary);
+        }
+        .btn-secondary:hover {
+            background: #2d924a;
+        }
+        .btn-danger {
+            background: var(--danger);
+        }
+        .btn-danger:hover {
+            background: #c5221f;
+        }
+        .btn-warning {
+            background: var(--warning);
+            color: var(--dark);
+        }
+        .btn-warning:hover {
+            background: #e09a00;
+        }
+        .progress-container {
+            margin: 30px 0;
+        }
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+        .progress-bar {
+            height: 24px;
+            background: #e8eaed;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                90deg,
+                rgba(255,255,255,0.1) 0%,
+                rgba(255,255,255,0.3) 50%,
+                rgba(255,255,255,0.1) 100%
+            );
+            animation: shimmer 2s infinite;
+        }
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-top: 25px;
+        }
+        .stat-card {
+            background: white;
+            border: 1px solid #e8eaed;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .stat-value {
+            font-size: 26px;
+            font-weight: 500;
+            color: var(--dark);
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: var(--gray);
+            margin-top: 5px;
+        }
+        .question-card {
+            background: white;
+            border: 1px solid #e8eaed;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .question-title {
+            font-weight: 500;
+            margin-bottom: 10px;
+            color: var(--dark);
+        }
+        .option-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .option-item input[type="number"] {
+            width: 70px;
+            margin-left: 10px;
+            padding: 8px;
+        }
+        .log-container {
+            margin-top: 30px;
+            border: 1px solid #e8eaed;
+            border-radius: 8px;
+            overflow: hidden;
+            background: white;
+        }
+        .log-header {
+            background: #f8f9fa;
+            padding: 12px 20px;
+            border-bottom: 1px solid #e8eaed;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .log-content {
+            height: 300px;
+            overflow-y: auto;
+            padding: 15px;
+            background: white;
+            font-family: 'Roboto Mono', monospace;
+        }
+        .log-entry {
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 13px;
+            display: flex;
+            line-height: 1.5;
+        }
+        .log-time {
+            color: var(--gray);
+            margin-right: 10px;
+            flex-shrink: 0;
+            font-family: 'Roboto Mono', monospace;
+        }
+        .log-message {
+            flex-grow: 1;
+            word-break: break-word;
+        }
+        .success {
+            color: var(--secondary);
+        }
+        .error {
+            color: var(--danger);
+        }
+        .warning {
+            color: var(--warning);
+        }
+        .info {
+            color: var(--primary);
+        }
+        .debug {
+            color: var(--gray);
+        }
+        .disclaimer {
+            margin-top: 30px;
+            padding: 15px;
+            background: #fff8e1;
+            border-left: 4px solid var(--warning);
+            border-radius: 4px;
+            font-size: 14px;
+            color: #5f6368;
+            line-height: 1.5;
+        }
+        .hidden {
+            display: none;
+        }
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: #555;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 13px;
+            font-weight: normal;
+        }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            .stats {
+                grid-template-columns: 1fr;
+            }
+            .input-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Analizador Universal de Formularios</h1>
+        <p class="subtitle">Herramienta para análisis automatizado de formularios con comportamiento humano</p>
+        
+        <!-- Panel 1: Configuración inicial -->
+        <div class="panel" id="setupPanel">
+            <div class="panel-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20Z" fill="#5F6368"/>
+                    <path d="M12 6C9.79 6 8 7.79 8 10C8 12.21 9.79 14 12 14C14.21 14 16 12.21 16 10C16 7.79 14.21 6 12 6ZM12 12C10.9 12 10 11.1 10 10C10 8.9 10.9 8 12 8C13.1 8 14 8.9 14 10C14 11.1 13.1 12 12 12Z" fill="#5F6368"/>
+                    <path d="M6.42 18.78C7.14 17.49 8.59 16.5 10.2 16.5H13.8C15.41 16.5 16.86 17.49 17.58 18.78C16.08 20.03 14.14 20.8 12 20.8C9.86 20.8 7.92 20.03 6.42 18.78Z" fill="#5F6368"/>
+                </svg>
+                Configuración inicial
+            </div>
+            
+            <div class="form-group">
+                <label for="formUrl">
+                    URL del formulario de Google:
+                    <span class="tooltip">(?)<span class="tooltiptext">Ejemplo: https://docs.google.com/forms/d/e/XXXX/viewform</span></span>
+                </label>
+                <input type="url" id="formUrl" placeholder="https://docs.google.com/forms/d/e/XXXX/viewform">
+            </div>
+            
+            <div class="form-group">
+                <label for="totalSubmissions">
+                    Número total de envíos:
+                    <span class="tooltip">(?)<span class="tooltiptext">Cantidad de formularios a enviar (1-1000)</span></span>
+                </label>
+                <input type="number" id="totalSubmissions" min="1" max="1000" value="50">
+            </div>
+            
+            <div class="form-group">
+                <label for="timePattern">
+                    Patrón temporal:
+                    <span class="tooltip">(?)<span class="tooltiptext">Distribución del tiempo entre envíos</span></span>
+                </label>
+                <select id="timePattern">
+                    <option value="human">Simulación humana (recomendado)</option>
+                    <option value="uniform">Uniforme</option>
+                    <option value="burst">Ráfagas naturales</option>
+                    <option value="random">Aleatorio completo</option>
+                    <option value="custom">Personalizado</option>
+                </select>
+                <div class="input-group" id="customTimeContainer" style="margin-top: 10px; display: none;">
+                    <input type="number" id="minDelay" min="500" max="5000" value="1200" placeholder="Mínimo (ms)">
+                    <input type="number" id="maxDelay" min="1000" max="15000" value="3500" placeholder="Máximo (ms)">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="geoPattern">
+                    Perfil geográfico:
+                    <span class="tooltip">(?)<span class="tooltiptext">Origen geográfico simulado para los envíos</span></span>
+                </label>
+                <select id="geoPattern">
+                    <option value="local">Local (predeterminado)</option>
+                    <option value="country">País</option>
+                    <option value="region">Región</option>
+                    <option value="random">Aleatorio mundial</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="errorHandling">
+                    Manejo de errores:
+                    <span class="tooltip">(?)<span class="tooltiptext">Cómo manejar envíos fallidos</span></span>
+                </label>
+                <select id="errorHandling">
+                    <option value="smart">Inteligente (recomendado)</option>
+                    <option value="retry">Reintentar siempre</option>
+                    <option value="skip">Omitir y continuar</option>
+                    <option value="stop">Detener en error</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="debugLevel">
+                    Nivel de registro:
+                    <span class="tooltip">(?)<span class="tooltiptext">Detalle de información en el registro</span></span>
+                </label>
+                <select id="debugLevel">
+                    <option value="minimal">Mínimo</option>
+                    <option value="normal" selected>Normal</option>
+                    <option value="detailed">Detallado</option>
+                    <option value="debug">Depuración</option>
+                </select>
+            </div>
+            
+            <button id="analyzeBtn" class="btn-secondary">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V5H19V19Z" fill="white"/>
+                    <path d="M11 7H13V9H11V7ZM11 11H13V17H11V11Z" fill="white"/>
+                </svg>
+                Analizar Formulario
+            </button>
+        </div>
+        
+        <!-- Panel 2: Configuración de respuestas (dinámico) -->
+        <div class="panel hidden" id="questionsPanel">
+            <div class="panel-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M11 18H13V16H11V18ZM12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM12 6C9.79 6 8 7.79 8 10H10C10 8.9 10.9 8 12 8C13.1 8 14 8.9 14 10C14 12 11 11.75 11 15H13C13 12.75 16 12.5 16 10C16 7.79 14.21 6 12 6Z" fill="#5F6368"/>
+                </svg>
+                Configuración de Respuestas
+            </div>
+            
+            <div id="questionsContainer">
+                <!-- Las preguntas se generarán dinámicamente aquí -->
+                <div class="info" style="text-align: center; padding: 20px;">
+                    Primero analiza un formulario para ver sus preguntas
+                </div>
+            </div>
+            
+            <div class="input-group" style="margin-top: 20px;">
+                <button id="backToSetupBtn" class="btn-warning">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" fill="currentColor"/>
+                    </svg>
+                    Volver a Configuración
+                </button>
+                <button id="startProcessBtn" class="btn-secondary">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M8 5V19L19 12L8 5Z" fill="white"/>
+                    </svg>
+                    Iniciar Proceso
+                </button>
+            </div>
+        </div>
+        
+        <!-- Panel 3: Progreso del envío -->
+        <div class="panel hidden" id="progressPanel">
+            <div class="panel-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20Z" fill="#5F6368"/>
+                    <path d="M12 6C9.79 6 8 7.79 8 10C8 12.21 9.79 14 12 14C14.21 14 16 12.21 16 10C16 7.79 14.21 6 12 6ZM12 12C10.9 12 10 11.1 10 10C10 8.9 10.9 8 12 8C13.1 8 14 8.9 14 10C14 11.1 13.1 12 12 12Z" fill="#5F6368"/>
+                    <path d="M6.42 18.78C7.14 17.49 8.59 16.5 10.2 16.5H13.8C15.41 16.5 16.86 17.49 17.58 18.78C16.08 20.03 14.14 20.8 12 20.8C9.86 20.8 7.92 20.03 6.42 18.78Z" fill="#5F6368"/>
+                </svg>
+                Progreso del Envío
+            </div>
+            
+            <div class="progress-container">
+                <div class="progress-header">
+                    <span id="progressText">Preparando sistema de envío...</span>
+                    <span id="timeRemaining">Tiempo estimado: calculando...</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressBar"></div>
+                </div>
+            </div>
+            
+            <div class="stats" id="statsContainer">
+                <div class="stat-card">
+                    <div class="stat-value" id="statCompleted">0</div>
+                    <div class="stat-label">Envíos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statSuccess">0</div>
+                    <div class="stat-label">Completados</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statRate">0/min</div>
+                    <div class="stat-label">Velocidad</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statElapsed">0s</div>
+                    <div class="stat-label">Tiempo</div>
+                </div>
+            </div>
+            
+            <div class="input-group" style="margin-top: 20px;">
+                <button id="stopProcessBtn" class="btn-danger">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M6 6H18V18H6V6Z" fill="white"/>
+                    </svg>
+                    Detener Proceso
+                </button>
+                <button id="backToQuestionsBtn" class="btn-warning hidden">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" fill="currentColor"/>
+                    </svg>
+                    Volver a Respuestas
+                </button>
+            </div>
+        </div>
+        
+        <!-- Panel de registro -->
+        <div class="panel">
+            <div class="panel-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 16H3V4H21M21 2H3C1.9 2 1 2.9 1 4V16C1 17.1 1.9 18 3 18H10V20H8V22H16V20H14V18H21C22.1 18 23 17.1 23 16V4C23 2.9 22.1 2 21 2Z" fill="#5F6368"/>
+                </svg>
+                Registro de Actividad
+                <button id="clearLogBtn" style="margin-left: auto; padding: 5px 10px; font-size: 13px; width: auto;">Limpiar Registro</button>
+            </div>
+            
+            <div class="log-container">
+                <div class="log-content" id="logContent">
+                    <div class="log-entry info">
+                        <span class="log-time">[Sistema]</span>
+                        <span class="log-message">Aplicación inicializada. Introduce la URL de un formulario de Google para comenzar.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="disclaimer">
+            <strong>Nota importante:</strong> Esta herramienta está diseñada exclusivamente para fines educativos y de investigación en sistemas de formularios. El uso para manipulación de concursos o procesos reales puede violar términos de servicio y leyes aplicables. El usuario asume toda la responsabilidad por el uso ético de este software. No se almacenan datos personales ni se realiza ningún tipo de tracking.
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elementos del DOM
+            const setupPanel = document.getElementById('setupPanel');
+            const questionsPanel = document.getElementById('questionsPanel');
+            const progressPanel = document.getElementById('progressPanel');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const backToSetupBtn = document.getElementById('backToSetupBtn');
+            const startProcessBtn = document.getElementById('startProcessBtn');
+            const stopProcessBtn = document.getElementById('stopProcessBtn');
+            const backToQuestionsBtn = document.getElementById('backToQuestionsBtn');
+            const clearLogBtn = document.getElementById('clearLogBtn');
+            const formUrlInput = document.getElementById('formUrl');
+            const totalSubmissionsInput = document.getElementById('totalSubmissions');
+            const timePatternSelect = document.getElementById('timePattern');
+            const customTimeContainer = document.getElementById('customTimeContainer');
+            const minDelayInput = document.getElementById('minDelay');
+            const maxDelayInput = document.getElementById('maxDelay');
+            const geoPatternSelect = document.getElementById('geoPattern');
+            const errorHandlingSelect = document.getElementById('errorHandling');
+            const debugLevelSelect = document.getElementById('debugLevel');
+            const questionsContainer = document.getElementById('questionsContainer');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const timeRemaining = document.getElementById('timeRemaining');
+            const logContent = document.getElementById('logContent');
+            const statCompleted = document.getElementById('statCompleted');
+            const statSuccess = document.getElementById('statSuccess');
+            const statRate = document.getElementById('statRate');
+            const statElapsed = document.getElementById('statElapsed');
+            
+            // Variables de estado
+            let isRunning = false;
+            let stopRequested = false;
+            let completedCount = 0;
+            let successCount = 0;
+            let totalOperations = 0;
+            let startTime = null;
+            let timerInterval = null;
+            let currentOperation = 0;
+            let formQuestions = [];
+            let formActionUrl = '';
+            let formFields = {};
+            
+            // Configuración regional
+            const regionalNames = {
+                local: {
+                    male: ['Aleix', 'Arnau', 'Biel', 'Dídac', 'Eduard', 'Gerard', 'Jan', 'Jordi', 'Marc', 'Oriol', 'Pau', 'Pol', 'Rafel', 'Sergi'],
+                    female: ['Aina', 'Alba', 'Anna', 'Berta', 'Carla', 'Clàudia', 'Gemma', 'Júlia', 'Laia', 'Marta', 'Mireia', 'Núria', 'Ona', 'Rosa'],
+                    lastNames: ['Abelló', 'Aguiló', 'Balaguer', 'Barceló', 'Bosch', 'Català', 'Ferrer', 'Garriga', 'Llull', 'Martí', 'Mascaró', 'Pujol', 'Roca', 'Ros', 'Soler', 'Vall'],
+                    domains: ['gmail.com', 'hotmail.com', 'outlook.com', 'yahoo.es', 'protonmail.com'],
+                    localDomains: ['copernic.cat', 'edu.gva.es', 'xtec.cat', 'ies.eu', 'ajuntament.cat']
+                },
+                country: {
+                    male: ['Alejandro', 'Álvaro', 'Carlos', 'David', 'Daniel', 'Eduardo', 'Fernando', 'Francisco', 'Javier', 'Jorge', 'José', 'Juan', 'Luis', 'Manuel', 'Miguel', 'Pablo', 'Pedro', 'Raúl', 'Ricardo', 'Roberto', 'Sergio'],
+                    female: ['Adriana', 'Ana', 'Andrea', 'Beatriz', 'Carla', 'Carmen', 'Claudia', 'Cristina', 'Elena', 'Isabel', 'Laura', 'Lucía', 'María', 'Marta', 'Nuria', 'Patricia', 'Paula', 'Raquel', 'Rosa', 'Sara', 'Silvia', 'Sofía', 'Sonia'],
+                    lastNames: ['García', 'Fernández', 'González', 'Rodríguez', 'López', 'Martínez', 'Sánchez', 'Pérez', 'Gómez', 'Martín', 'Jiménez', 'Ruiz', 'Hernández', 'Díaz', 'Moreno', 'Álvarez', 'Muñoz', 'Romero', 'Alonso', 'Gutiérrez', 'Navarro', 'Torres', 'Domínguez', 'Vázquez', 'Ramos', 'Gil', 'Ramírez', 'Serrano', 'Blanco', 'Suárez', 'Molina', 'Morales', 'Ortega', 'Delgado', 'Castro', 'Ortiz', 'Rubio', 'Marín', 'Sanz', 'Iglesias', 'Medina', 'Cortés', 'Garrido', 'Castillo', 'Santos', 'Lozano', 'Guerrero', 'Cano', 'Prieto', 'Méndez', 'Cruz', 'Calvo', 'Gallego', 'Vidal', 'León', 'Herrera', 'Márquez', 'Peña', 'Flores', 'Cabrera', 'Campos', 'Vega', 'Fuentes', 'Carrasco', 'Diez', 'Reyes', 'Caballero', 'Núñez', 'Aguilar', 'Pascual', 'Santana', 'Herrero', 'Montero', 'Lorenzo', 'Hidalgo', 'Giménez', 'Ibáñez', 'Ferrer', 'Durán', 'Santiago', 'Benítez', 'Mora', 'Vicente', 'Vargas', 'Arias', 'Carmona', 'Crespo', 'Soto', 'Pastor', 'Sáez', 'Velasco', 'Soler', 'Moya', 'Esteban', 'Parra', 'Bravo', 'Gallardo', 'Rojas'],
+                    domains: ['gmail.com', 'hotmail.com', 'outlook.com', 'yahoo.es', 'protonmail.com', 'icloud.com'],
+                    localDomains: ['educa.madrid.org', 'educacion.navarra.es', 'juntadeandalucia.es', 'xunta.gal', 'educastur.org']
+                }
+            };
+            
+            // Patrones de comportamiento humano mejorados
+            const humanPatterns = {
+                typingSpeed: [40, 150],
+                errorRate: 0.18,
+                correctionSpeed: [20, 100],
+                clickDelay: [80, 600],
+                thinkTime: [800, 6000],
+                navigationPatterns: [
+                    { steps: 3, delay: [100, 300] },
+                    { steps: 5, delay: [200, 500] },
+                    { steps: 7, delay: [300, 800] }
+                ],
+                deviceTypes: [
+                    { type: 'desktop', ratio: 0.7 },
+                    { type: 'mobile', ratio: 0.25 },
+                    { type: 'tablet', ratio: 0.05 }
+                ]
+            };
+            
+            // Registrar actividad con niveles de detalle
+            function logActivity(message, type = 'info') {
+                const debugLevel = debugLevelSelect.value;
+                
+                if (debugLevel === 'minimal' && type !== 'error' && type !== 'success') return;
+                if (debugLevel === 'normal' && type === 'debug') return;
+                
+                const entry = document.createElement('div');
+                entry.className = `log-entry ${type}`;
+                
+                const time = document.createElement('span');
+                time.className = 'log-time';
+                time.textContent = `[${new Date().toLocaleTimeString()}]`;
+                
+                const msg = document.createElement('span');
+                msg.className = 'log-message';
+                msg.textContent = message;
+                
+                entry.appendChild(time);
+                entry.appendChild(msg);
+                logContent.appendChild(entry);
+                logContent.scrollTop = logContent.scrollHeight;
+            }
+            
+            // Función para obtener el formulario usando CORS proxy
+            async function fetchFormWithProxy(formUrl) {
+                const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+                try {
+                    const response = await fetch(proxyUrl + formUrl, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+                    return await response.text();
+                } catch (error) {
+                    throw new Error(`Error al acceder al formulario: ${error.message}`);
+                }
+            }
+
+            // Analizar formulario de Google
+            async function analyzeGoogleForm() {
+                const formUrl = formUrlInput.value.trim();
+                
+                if (!formUrl) {
+                    logActivity('Error: Introduce una URL válida de formulario de Google', 'error');
+                    return;
+                }
+                
+                try {
+                    logActivity('Analizando formulario...', 'info');
+                    
+                    // Extraer ID del formulario de la URL
+                    const formIdMatch = formUrl.match(/\/d\/e\/([^\/]+)/) || formUrl.match(/\/d\/([^\/]+)/);
+                    if (!formIdMatch) {
+                        throw new Error('URL de formulario no válida. Debe ser como: https://docs.google.com/forms/d/e/XXXX/viewform');
+                    }
+                    
+                    const formId = formIdMatch[1];
+                    formActionUrl = `https://docs.google.com/forms/d/e/${formId}/formResponse`;
+                    
+                    // Usar el proxy para evitar problemas CORS
+                    const html = await fetchFormWithProxy(formUrl);
+                    
+                    // Extraer preguntas del HTML
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    
+                    // Buscar todas las preguntas - método mejorado
+                    const questionElements = Array.from(doc.querySelectorAll('div[role="listitem"], div[role="group"]'));
+                    formQuestions = [];
+                    formFields = {};
+                    
+                    questionElements.forEach((item, index) => {
+                        try {
+                            const questionText = item.querySelector('div[role="heading"] span, .M7eMe span')?.textContent || `Pregunta ${index + 1}`;
+                            const inputName = item.querySelector('input[name], textarea[name], select[name]')?.name;
+                            
+                            if (inputName) {
+                                const questionId = inputName.replace(/^entry\./, '');
+                                const options = [];
+                                
+                                // Para preguntas de opción múltiple/radio
+                                const optionElements = item.querySelectorAll('div[role="radio"], div[role="checkbox"]');
+                                optionElements.forEach(opt => {
+                                    const optionText = opt.textContent.trim();
+                                    if (optionText) options.push(optionText);
+                                });
+                                
+                                // Para preguntas de selección (dropdown)
+                                const selectOptions = item.querySelectorAll('option');
+                                if (selectOptions.length > 0) {
+                                    selectOptions.forEach(opt => {
+                                        if (opt.value) options.push(opt.textContent.trim());
+                                    });
+                                }
+                                
+                                // Determinar tipo de pregunta
+                                let questionType = 'text';
+                                if (optionElements.length > 0) {
+                                    questionType = item.querySelector('div[role="radio"]') ? 'radio' : 'checkbox';
+                                } else if (selectOptions.length > 0) {
+                                    questionType = 'select';
+                                }
+                                
+                                formQuestions.push({
+                                    id: questionId,
+                                    name: inputName,
+                                    text: questionText,
+                                    options: options.length > 0 ? options : ['Texto libre'],
+                                    type: questionType
+                                });
+                                
+                                formFields[inputName] = {
+                                    type: questionType,
+                                    options: options.length > 0 ? options : ['Texto libre']
+                                };
+                            }
+                        } catch (error) {
+                            console.error(`Error procesando pregunta ${index}:`, error);
+                        }
+                    });
+                    
+                    if (formQuestions.length === 0) {
+                        // Intentar método alternativo para nuevos diseños de Google Forms
+                        const inputs = doc.querySelectorAll('input[name], textarea[name], select[name]');
+                        inputs.forEach(input => {
+                            const name = input.name;
+                            if (name.startsWith('entry.')) {
+                                const questionId = name.replace(/^entry\./, '');
+                                formQuestions.push({
+                                    id: questionId,
+                                    name: name,
+                                    text: `Pregunta ${formQuestions.length + 1}`,
+                                    options: ['Texto libre'],
+                                    type: 'text'
+                                });
+                                formFields[name] = { type: 'text', options: ['Texto libre'] };
+                            }
+                        });
+                        
+                        if (formQuestions.length === 0) {
+                            throw new Error('No se encontraron preguntas. ¿Es un formulario de Google válido?');
+                        }
+                    }
+                    
+                    logActivity(`Formulario analizado correctamente. Se encontraron ${formQuestions.length} preguntas.`, 'success');
+                    logActivity(`URL de envío: ${formActionUrl}`, 'debug');
+                    
+                    // Mostrar preguntas para configuración
+                    showQuestionsConfiguration();
+                    
+                } catch (error) {
+                    logActivity(`Error al analizar el formulario: ${error.message}`, 'error');
+                    console.error('Error detallado:', error);
+                    
+                    // Sugerencia para usuarios
+                    if (error.message.includes('CORS') || error.message.includes('Failed to fetch')) {
+                        logActivity('Solución: Prueba con un proxy CORS alternativo o habilita temporalmente el acceso en https://cors-anywhere.herokuapp.com/corsdemo', 'warning');
+                    }
+                }
+            }
+            
+            // Mostrar configuración de preguntas
+            function showQuestionsConfiguration() {
+                questionsContainer.innerHTML = '';
+                
+                formQuestions.forEach((question, qIndex) => {
+                    const questionCard = document.createElement('div');
+                    questionCard.className = 'question-card';
+                    
+                    const questionTitle = document.createElement('div');
+                    questionTitle.className = 'question-title';
+                    questionTitle.textContent = `${qIndex + 1}. ${question.text}`;
+                    questionCard.appendChild(questionTitle);
+                    
+                    question.options.forEach((option, oIndex) => {
+                        const optionItem = document.createElement('div');
+                        optionItem.className = 'option-item';
+                        
+                        const label = document.createElement('label');
+                        label.style.flexGrow = '1';
+                        label.textContent = option;
+                        
+                        const input = document.createElement('input');
+                        input.type = 'number';
+                        input.min = '0';
+                        input.max = totalSubmissionsInput.value;
+                        input.value = '0';
+                        input.dataset.questionId = question.id;
+                        input.dataset.optionIndex = oIndex;
+                        input.dataset.optionText = option;
+                        
+                        optionItem.appendChild(label);
+                        optionItem.appendChild(input);
+                        questionCard.appendChild(optionItem);
+                    });
+                    
+                    questionsContainer.appendChild(questionCard);
+                });
+                
+                setupPanel.classList.add('hidden');
+                questionsPanel.classList.remove('hidden');
+            }
+            
+            // Generar identidad completa realista
+            function generateRealIdentity() {
+                const region = geoPatternSelect.value;
+                const nameSet = regionalNames[region === 'local' ? 'local' : 'country'];
+                
+                const isMale = Math.random() > 0.5;
+                const firstName = isMale 
+                    ? nameSet.male[Math.floor(Math.random() * nameSet.male.length)]
+                    : nameSet.female[Math.floor(Math.random() * nameSet.female.length)];
+                
+                const lastName1 = nameSet.lastNames[Math.floor(Math.random() * nameSet.lastNames.length)];
+                const lastName2 = Math.random() > 0.7 
+                    ? nameSet.lastNames[Math.floor(Math.random() * nameSet.lastNames.length)]
+                    : '';
+                
+                const fullName = lastName2 ? `${firstName} ${lastName1} ${lastName2}` : `${firstName} ${lastName1}`;
+                
+                // Patrones de correo electrónico
+                const emailPatterns = [
+                    `${firstName.toLowerCase()}.${lastName1.toLowerCase()}`,
+                    `${firstName.toLowerCase()}${lastName1.toLowerCase()}`,
+                    `${firstName.charAt(0).toLowerCase()}${lastName1.toLowerCase()}`,
+                    `${firstName.toLowerCase()}${Math.floor(Math.random() * 90) + 10}`,
+                    `${lastName1.toLowerCase()}${firstName.toLowerCase().substring(0, 3)}`,
+                    `${firstName.toLowerCase().substring(0, 3)}${lastName1.toLowerCase().substring(0, 3)}${Math.floor(Math.random() * 100)}`,
+                    `${firstName.toLowerCase()}_${lastName1.toLowerCase()}`,
+                    `${lastName1.toLowerCase()}.${firstName.toLowerCase().substring(0, 2)}`,
+                    `${firstName.toLowerCase().substring(0, 2)}.${lastName1.toLowerCase()}`,
+                    `${firstName.toLowerCase()}${lastName1.charAt(0).toLowerCase()}${Math.floor(Math.random() * 1000)}`
+                ];
+                
+                const username = emailPatterns[Math.floor(Math.random() * emailPatterns.length)];
+                
+                // Probabilidad de usar dominio local
+                let localDomainProbability = 0.3;
+                if (region === 'local') localDomainProbability = 0.6;
+                
+                const useLocalDomain = Math.random() < localDomainProbability;
+                const domain = useLocalDomain
+                    ? nameSet.localDomains[Math.floor(Math.random() * nameSet.localDomains.length)]
+                    : nameSet.domains[Math.floor(Math.random() * nameSet.domains.length)];
+                
+                const email = `${username}@${domain}`;
+                
+                return {
+                    fullName,
+                    email,
+                    gender: isMale ? 'male' : 'female',
+                    region
+                };
+            }
+            
+            // Calcular tiempo de espera
+            function calculateWaitTime(index, total) {
+                const pattern = timePatternSelect.value;
+                
+                switch(pattern) {
+                    case 'burst':
+                        if (index % (3 + Math.floor(Math.random() * 5)) === 0) {
+                            return 4000 + Math.random() * 8000;
+                        } else {
+                            return 300 + Math.random() * 1200;
+                        }
+                        
+                    case 'random':
+                        return 500 + Math.floor(-Math.log(Math.random()) * 2000);
+                        
+                    case 'human':
+                        const baseTime = 1000 + Math.random() * 2000;
+                        const fatigueFactor = 1 + (index / total) * 0.5;
+                        const randomVariation = 0.8 + Math.random() * 0.4;
+                        const extraPause = Math.random() > 0.9 ? 2000 + Math.random() * 3000 : 0;
+                        return baseTime * fatigueFactor * randomVariation + extraPause;
+                        
+                    case 'custom':
+                        const min = parseInt(minDelayInput.value);
+                        const max = parseInt(maxDelayInput.value);
+                        return min + Math.random() * (max - min);
+                        
+                    case 'uniform':
+                    default:
+                        return 1500 + (Math.random() - 0.5) * 500;
+                }
+            }
+            
+            // Obtener respuestas configuradas
+            function getConfiguredResponses() {
+                const responses = {};
+                const optionInputs = questionsContainer.querySelectorAll('input[type="number"]');
+                
+                // Inicializar estructura de respuestas
+                formQuestions.forEach(question => {
+                    responses[question.name] = {
+                        type: question.type,
+                        values: []
+                    };
+                    
+                    if (question.type === 'text') {
+                        responses[question.name].values.push({
+                            text: 'Respuesta generada',
+                            weight: 1
+                        });
+                    }
+                });
+                
+                // Procesar opciones configuradas
+                optionInputs.forEach(input => {
+                    const questionId = input.dataset.questionId;
+                    const optionIndex = parseInt(input.dataset.optionIndex);
+                    const optionText = input.dataset.optionText;
+                    const count = parseInt(input.value) || 0;
+                    
+                    if (count > 0) {
+                        const question = formQuestions.find(q => q.id === questionId);
+                        if (question) {
+                            responses[question.name].values.push({
+                                text: optionText,
+                                weight: count
+                            });
+                        }
+                    }
+                });
+                
+                return responses;
+            }
+            
+            // Seleccionar respuesta aleatoria según ponderación
+            function getRandomResponse(responses) {
+                const totalWeight = responses.reduce((sum, r) => sum + r.weight, 0);
+                let random = Math.random() * totalWeight;
+                let weightSum = 0;
+                
+                for (const response of responses) {
+                    weightSum += response.weight;
+                    if (random <= weightSum) return response.text;
+                }
+                
+                return responses[0]?.text || '';
+            }
+            
+            // Simular navegación humana
+            async function simulateHumanNavigation() {
+                const thinkTime = humanPatterns.thinkTime[0] + 
+                                 Math.pow(Math.random(), 2) * 
+                                 (humanPatterns.thinkTime[1] - humanPatterns.thinkTime[0]);
+                
+                await new Promise(r => setTimeout(r, thinkTime));
+                
+                const navPattern = humanPatterns.navigationPatterns[
+                    Math.floor(Math.random() * humanPatterns.navigationPatterns.length)
+                ];
+                
+                for (let i = 0; i < navPattern.steps; i++) {
+                    const stepDelay = navPattern.delay[0] + 
+                                      Math.random() * 
+                                      (navPattern.delay[1] - navPattern.delay[0]);
+                    
+                    await new Promise(r => setTimeout(r, stepDelay));
+                    
+                    if (i > 0 && i % 3 === 0) {
+                        await new Promise(r => setTimeout(r, 100 + Math.random() * 400));
+                    }
+                }
+                
+                await new Promise(r => setTimeout(r, 300 + Math.random() * 700));
+            }
+            
+            // Generar headers HTTP realistas
+            function generateRealisticHeaders(identity) {
+                let deviceType = 'desktop';
+                const rand = Math.random();
+                let cumulativeRatio = 0;
+                
+                for (const dt of humanPatterns.deviceTypes) {
+                    cumulativeRatio += dt.ratio;
+                    if (rand <= cumulativeRatio) {
+                        deviceType = dt.type;
+                        break;
+                    }
+                }
+                
+                // Generar User-Agent según dispositivo
+                let userAgent = '';
+                const chromeVersion = Math.floor(Math.random() * 15) + 90;
+                const firefoxVersion = Math.floor(Math.random() * 30) + 85;
+                const safariVersion = Math.floor(Math.random() * 3) + 14;
+                const osVersion = Math.floor(Math.random() * 5) + 10;
+                
+                switch(deviceType) {
+                    case 'desktop':
+                        if (Math.random() > 0.5) {
+                            userAgent = `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${chromeVersion}.0.0.0 Safari/537.36`;
+                        } else {
+                            userAgent = `Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:${firefoxVersion}.0) Gecko/20100101 Firefox/${firefoxVersion}.0`;
+                        }
+                        break;
+                    case 'mobile':
+                        if (Math.random() > 0.5) {
+                            const models = ['SM-G991B', 'SM-G781B', 'SM-G998B', 'Pixel 5', 'Pixel 6'];
+                            userAgent = `Mozilla/5.0 (Linux; Android ${osVersion}; ${models[Math.floor(Math.random() * models.length)]}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${chromeVersion}.0.0.0 Mobile Safari/537.36`;
+                        } else {
+                            userAgent = `Mozilla/5.0 (iPhone; CPU iPhone OS ${osVersion}_${Math.floor(Math.random() * 5)} like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/${safariVersion}.0 Mobile/15E148 Safari/604.1`;
+                        }
+                        break;
+                    case 'tablet':
+                        userAgent = `Mozilla/5.0 (iPad; CPU OS ${osVersion}_${Math.floor(Math.random() * 5)} like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/${safariVersion}.0 Mobile/15E148 Safari/604.1`;
+                        break;
+                }
+                
+                return {
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+                    'Accept-Encoding': 'gzip, deflate, br',
+                    'Accept-Language': 'es-ES,es;q=0.9,en-US;q=0.8,en;q=0.7',
+                    'Cache-Control': 'max-age=0',
+                    'Connection': 'keep-alive',
+                    'DNT': Math.random() > 0.3 ? '1' : '0',
+                    'Host': 'docs.google.com',
+                    'Origin': 'https://docs.google.com',
+                    'Referer': formUrlInput.value,
+                    'Sec-Fetch-Dest': 'document',
+                    'Sec-Fetch-Mode': 'navigate',
+                    'Sec-Fetch-Site': 'same-origin',
+                    'Sec-Fetch-User': '?1',
+                    'Upgrade-Insecure-Requests': '1',
+                    'User-Agent': userAgent,
+                    'X-Client-Data': Math.random() > 0.5 ? 'CJW2yQEIhrbJAQjBtskBCKmdygE=' : '',
+                    'X-Requested-With': deviceType === 'mobile' ? 'com.android.chrome' : ''
+                };
+            }
+            
+            // Enviar formulario con todas las simulaciones
+            async function submitForm(identity, index, total, responsesConfig) {
+                const startTime = Date.now();
+                let success = false;
+                let attempts = 0;
+                let lastError = '';
+                
+                const maxAttempts = errorHandlingSelect.value === 'retry' ? 5 : 3;
+                
+                while (!success && attempts < maxAttempts && !stopRequested) {
+                    attempts++;
+                    
+                    try {
+                        // 1. Simular navegación humana
+                        if (debugLevelSelect.value !== 'minimal') {
+                            logActivity(`[${index}/${total}] Simulando navegación (Intento ${attempts})`, 'debug');
+                        }
+                        await simulateHumanNavigation();
+                        
+                        // 2. Crear FormData con respuestas
+                        const formData = new FormData();
+                        
+                        // Generar respuestas según configuración
+                        for (const [fieldName, fieldConfig] of Object.entries(responsesConfig)) {
+                            if (fieldConfig.values.length > 0) {
+                                const response = getRandomResponse(fieldConfig.values);
+                                formData.append(fieldName, response);
+                                
+                                if (debugLevelSelect.value === 'debug') {
+                                    logActivity(`[${index}/${total}] Campo: ${fieldName} = ${response}`, 'debug');
+                                }
+                            }
+                        }
+                        
+                        // Añadir campos adicionales que Google Forms espera
+                        formData.append('submit', 'Submit');
+                        formData.append('fbzx', Math.random().toString(36).substring(2, 15));
+                        
+                        // Usar proxy para el envío si hay problemas CORS
+                        let submitUrl = formActionUrl;
+                        if (submitUrl.includes('google.com')) {
+                            submitUrl = 'https://cors-anywhere.herokuapp.com/' + submitUrl;
+                        }
+                        
+                        // Configurar headers
+                        const headers = {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'Accept': '*/*',
+                            'Origin': 'https://docs.google.com',
+                            'Referer': formUrlInput.value,
+                            'User-Agent': navigator.userAgent
+                        };
+                        
+                        // 3. Enviar datos
+                        const response = await fetch(submitUrl, {
+                            method: 'POST',
+                            mode: 'no-cors',
+                            body: new URLSearchParams([...formData]),
+                            headers: headers
+                        });
+                        
+                        // 4. Simular tiempo de lectura después del envío
+                        const readTime = 800 + Math.random() * 2500;
+                        await new Promise(r => setTimeout(r, readTime));
+                        
+                        // Considerar éxito aunque no podamos verificar la respuesta (modo no-cors)
+                        success = true;
+                        
+                        const totalDuration = Date.now() - startTime;
+                        logActivity(`[${index}/${total}] Envío completado (${totalDuration}ms)`, 'success');
+                        
+                        return true;
+                        
+                    } catch (error) {
+                        lastError = error.message;
+                        const attemptDuration = Date.now() - startTime;
+                        
+                        logActivity(`[${index}/${total}] Intento ${attempts} fallido: ${error.message} (${attemptDuration}ms)`, 'error');
+                        
+                        if (errorHandlingSelect.value === 'stop') {
+                            throw error;
+                        }
+                        
+                        if (attempts < maxAttempts && errorHandlingSelect.value !== 'skip') {
+                            const retryDelay = Math.min(
+                                30000,
+                                Math.pow(2, attempts) * 1000 + Math.random() * 1000
+                            );
+                            
+                            logActivity(`[${index}/${total}] Reintentando en ${Math.round(retryDelay/1000)}s...`, 'warning');
+                            await new Promise(r => setTimeout(r, retryDelay));
+                        }
+                    }
+                }
+                
+                if (!success) {
+                    const totalDuration = Date.now() - startTime;
+                    logActivity(`[${index}/${total}] Envío fallido después de ${attempts} intentos: ${lastError} (${totalDuration}ms)`, 'error');
+                    
+                    if (errorHandlingSelect.value === 'stop') {
+                        stopRequested = true;
+                        throw new Error(`Envío fallido: ${lastError}`);
+                    }
+                }
+                
+                return success;
+            }
+            
+            // Actualizar estadísticas
+            function updateStats() {
+                statCompleted.textContent = completedCount;
+                statSuccess.textContent = successCount;
+                
+                if (startTime && completedCount > 0) {
+                    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                    statElapsed.textContent = `${elapsed}s`;
+                    
+                    const rate = Math.round((completedCount / elapsed) * 60);
+                    statRate.textContent = `${rate}/min`;
+                }
+            }
+            
+            // Proceso principal de envío
+            async function startSubmissionProcess() {
+                // Validación
+                totalOperations = parseInt(totalSubmissionsInput.value);
+                if (isNaN(totalOperations) || totalOperations < 1 || totalOperations > 1000) {
+                    logActivity('Error: Número de envíos no válido. Debe ser entre 1 y 1000.', 'error');
+                    return;
+                }
+                
+                // Obtener configuración de respuestas
+                const responsesConfig = getConfiguredResponses();
+                let hasResponses = false;
+                
+                for (const field of Object.values(responsesConfig)) {
+                    if (field.values.length > 0) {
+                        hasResponses = true;
+                        break;
+                    }
+                }
+                
+                if (!hasResponses) {
+                    logActivity('Error: Debes configurar al menos una respuesta para cada pregunta', 'error');
+                    return;
+                }
+                
+                // Configurar interfaz
+                isRunning = true;
+                stopRequested = false;
+                completedCount = 0;
+                successCount = 0;
+                startTime = Date.now();
+                currentOperation = 0;
+                
+                questionsPanel.classList.add('hidden');
+                progressPanel.classList.remove('hidden');
+                progressBar.style.width = '0%';
+                progressText.textContent = 'Inicializando sistema...';
+                timeRemaining.textContent = 'Tiempo estimado: calculando...';
+                
+                // Iniciar temporizador de estadísticas
+                timerInterval = setInterval(updateStats, 1000);
+                
+                logActivity(`Iniciando proceso de envío para ${totalOperations} formularios...`, 'info');
+                logActivity(`Configuración de respuestas: ${JSON.stringify(responsesConfig)}`, 'debug');
+                
+                try {
+                    // Bucle principal de envíos
+                    for (currentOperation = 1; currentOperation <= totalOperations && !stopRequested; currentOperation++) {
+                        // Actualizar progreso
+                        const progress = Math.round((currentOperation / totalOperations) * 100);
+                        progressBar.style.width = `${progress}%`;
+                        progressText.textContent = `Progreso: ${currentOperation}/${totalOperations} (${progress}%)`;
+                        
+                        // Calcular tiempo estimado
+                        if (currentOperation > 1) {
+                            const elapsed = (Date.now() - startTime) / 1000;
+                            const remaining = (elapsed / (currentOperation - 1)) * (totalOperations - currentOperation);
+                            
+                            if (remaining < 60) {
+                                timeRemaining.textContent = `Tiempo estimado: ~${Math.round(remaining)} segundos`;
+                            } else {
+                                const minutes = Math.floor(remaining / 60);
+                                const seconds = Math.round(remaining % 60);
+                                timeRemaining.textContent = `Tiempo estimado: ~${minutes}m ${seconds}s`;
+                            }
+                        }
+                        
+                        // Generar identidad realista
+                        const identity = generateRealIdentity();
+                        logActivity(`[${currentOperation}/${totalOperations}] Preparando envío como ${identity.email}`, 'info');
+                        
+                        // Enviar formulario
+                        const success = await submitForm(identity, currentOperation, totalOperations, responsesConfig);
+                        
+                        completedCount++;
+                        if (success) successCount++;
+                        updateStats();
+                        
+                        // Espera variable antes del próximo envío
+                        if (currentOperation < totalOperations && !stopRequested) {
+                            const waitTime = calculateWaitTime(currentOperation, totalOperations);
+                            progressText.textContent = `Pausa: ${Math.round(waitTime/1000)}s...`;
+                            await new Promise(r => setTimeout(r, waitTime));
+                        }
+                    }
+                } catch (error) {
+                    logActivity(`Error crítico: ${error.message}`, 'error');
+                    console.error(error);
+                } finally {
+                    // Finalización del proceso
+                    clearInterval(timerInterval);
+                    isRunning = false;
+                    
+                    if (stopRequested) {
+                        progressText.textContent = `Proceso pausado: ${completedCount}/${totalOperations} envíos`;
+                        logActivity(`Proceso pausado por el usuario. Envíos completados: ${completedCount} (${successCount} exitosos)`, 'warning');
+                        backToQuestionsBtn.classList.remove('hidden');
+                    } else {
+                        progressText.textContent = `Proceso completado: ${completedCount}/${totalOperations} envíos`;
+                        const statusType = completedCount === successCount ? 'success' : (successCount > 0 ? 'warning' : 'error');
+                        logActivity(`Proceso finalizado. Total: ${completedCount} envíos (${successCount} exitosos, ${completedCount - successCount} fallidos)`, statusType);
+                        backToQuestionsBtn.classList.remove('hidden');
+                    }
+                    
+                    // Mostrar resumen final
+                    const totalTime = (Date.now() - startTime) / 1000;
+                    const avgTime = totalTime / completedCount;
+                    const rate = completedCount / totalTime * 60;
+                    
+                    logActivity(`Resumen final:`, 'info');
+                    logActivity(`- Tiempo total: ${Math.round(totalTime)} segundos`, 'info');
+                    logActivity(`- Velocidad promedio: ${Math.round(rate)} envíos/minuto`, 'info');
+                    logActivity(`- Tiempo promedio por envío: ${avgTime.toFixed(2)} segundos`, 'info');
+                    logActivity(`- Tasa de éxito: ${successCount}/${completedCount} (${(successCount/completedCount*100).toFixed(1)}%)`, 
+                              successCount === completedCount ? 'success' : (successCount > 0 ? 'warning' : 'error'));
+                }
+            }
+            
+            // Event listeners
+            analyzeBtn.addEventListener('click', function() {
+                analyzeGoogleForm().catch(error => {
+                    logActivity(`Error: ${error.message}`, 'error');
+                    console.error(error);
+                });
+            });
+            
+            backToSetupBtn.addEventListener('click', function() {
+                questionsPanel.classList.add('hidden');
+                setupPanel.classList.remove('hidden');
+            });
+            
+            startProcessBtn.addEventListener('click', function() {
+                startSubmissionProcess().catch(error => {
+                    logActivity(`Error: ${error.message}`, 'error');
+                    console.error(error);
+                });
+            });
+            
+            stopProcessBtn.addEventListener('click', function() {
+                if (isRunning) {
+                    stopRequested = true;
+                    stopProcessBtn.disabled = true;
+                    logActivity('Solicitud de pausa recibida. Finalizando envío actual...', 'warning');
+                }
+            });
+            
+            backToQuestionsBtn.addEventListener('click', function() {
+                progressPanel.classList.add('hidden');
+                questionsPanel.classList.remove('hidden');
+                backToQuestionsBtn.classList.add('hidden');
+            });
+            
+            clearLogBtn.addEventListener('click', function() {
+                logContent.innerHTML = '<div class="log-entry info">' +
+                    '<span class="log-time">[Sistema]</span>' +
+                    '<span class="log-message">Registro limpiado. Listo para nueva operación.</span>' +
+                    '</div>';
+            });
+            
+            timePatternSelect.addEventListener('change', function() {
+                customTimeContainer.style.display = this.value === 'custom' ? 'flex' : 'none';
+            });
+            
+            // Validación de entradas
+            totalSubmissionsInput.addEventListener('change', function() {
+                let value = parseInt(this.value);
+                if (isNaN(value)) value = 50;
+                if (value < 1) value = 1;
+                if (value > 1000) value = 1000;
+                this.value = value;
+            });
+            
+            minDelayInput.addEventListener('change', function() {
+                let value = parseInt(this.value);
+                if (isNaN(value)) value = 1000;
+                if (value < 500) value = 500;
+                if (value > 5000) value = 5000;
+                this.value = value;
+                
+                if (parseInt(this.value) > parseInt(maxDelayInput.value)) {
+                    maxDelayInput.value = this.value;
+                }
+            });
+            
+            maxDelayInput.addEventListener('change', function() {
+                let value = parseInt(this.value);
+                if (isNaN(value)) value = 3000;
+                if (value < 1000) value = 1000;
+                if (value > 15000) value = 15000;
+                this.value = value;
+                
+                if (parseInt(this.value) < parseInt(minDelayInput.value)) {
+                    minDelayInput.value = this.value;
+                }
+            });
+            
+            // Mostrar/ocultar controles personalizados según selección
+            timePatternSelect.dispatchEvent(new Event('change'));
+        });
+    </script>
+</body>
+</html>
